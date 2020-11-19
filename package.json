@@ -1,6 +1,6 @@
 {
-  "name": "node-lib-generic-store",
-  "version": "0.1.0",
+  "name": "lib-generic-store",
+  "version": "0.1.1",
   "description": "A generic implentation of a key-value store",
   "main": "index.js",
   "scripts": {

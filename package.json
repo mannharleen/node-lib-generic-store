@@ -1,0 +1,24 @@
+{
+  "name": "node-lib-generic-store",
+  "version": "0.1.0",
+  "description": "A generic implentation of a key-value store",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": ["store", "key", "value", "generic"],
+  "author": "harleen mann",
+  "license": "MIT",
+  "dependencies": {
+    "express-session": "^1.17.1"
+  },
+  "devDependencies": {
+    "connect-redis": "^5.0.0",
+    "jest": "^26.6.3",
+    "redis-mock": "^0.54.0",
+    "session-file-store": "^1.5.0"
+  },
+  "peerDependencies": {
+    "connect-redis": "^5.0.0"
+  }
+}

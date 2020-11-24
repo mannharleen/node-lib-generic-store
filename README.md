@@ -1,5 +1,5 @@
 # node-lib-generic-store
-Universal Store is a generic implentation of a key-value store. It can be implemented using any 'session stores' that are compatible with the expressjs framework's session [middleware](https://github.com/expressjs/session#compatible-session-stores) *.
+This is a generic implentation of a key-value store. It can be implemented using any 'session stores' that are compatible with the expressjs framework's session [middleware](https://github.com/expressjs/session#compatible-session-stores) *.
 
 \* We recommend the use of [connect-redis](https://www.npmjs.com/package/connect-redis) and is marked as a peer dependency for this library. Don't worry if you don't understand what this means.
 
@@ -9,14 +9,15 @@ The following benefits have been observed:
 - Additional implentation of 'lock' and 'unlock' on any underlying store
 - Promise based APIs
 
-## What it does
+## Introduction
 Calling the constructor like this:
 ```
 let store = new GenericStore(storeType, storeOptions)
 ```
 gets you a `store` object. This object supports:
-- all the methods supported by the underlying storeType
-- all these methods suffixed with `Prom` as a promisified version that are easier to use
+- all the methods supported by the underlying storeType. eg. `store.get()`
+- all these methods suffixed with **Prom** as a promisified version that are easier to use. e.g `store.getProm()`
+- locking a key for exclusive access while others wait for it to be unclocked
 
 ## Usage
 
@@ -25,7 +26,7 @@ gets you a `store` object. This object supports:
 ;(async () => {
     // usage with file store:
     let storeType = 'session-file-store'    
-    let storeOptions = {path: './_sessions'}
+    let storeOptions = {path: './_data'}
 
     // get the store object
     let store = new GenericStore(storeType, storeOptions)
@@ -35,7 +36,6 @@ gets you a `store` object. This object supports:
     let length = await store.lengthProm() // = 1
     let data = await store.getProm('0') // = {'a': 'value'}
 })();
-
 ```
 
 ### Usage with redis based store
@@ -58,55 +58,87 @@ gets you a `store` object. This object supports:
 
 ```
 
-## General API
+### Usage by locking
+```js
+;(async () => {
+    // usage with file store:
+    let storeType = 'session-file-store'    
+    let storeOptions = {path: './_data'}
 
-> General APIs:
-This module supports all the methods/operations that are supported by the underlying store type.
+    // get the store object
+    let store = new GenericStore(storeType, storeOptions)
 
-> Special APIs: There are also `special apis` that are supported by generic-store. See the next section 'Special API'
+    // now use promises to perform operations
+    await store.setProm('0', {'a': 'value'})
+    let kv = await store.lockProm('0')
+    let length = await store.lengthProm() // = 1
+    let data = await kv.getProm() // = {'a': 'value'}
+})();
+```
 
-### store.all(callback) | store.allProm()
-> Optional: Not required to be supported by underlying store type
+# APIs
+- All APIs return promises
+- options:
+```
+{ 
+    wait: true  // is the key is locked, wait for it to be released
+}
+```
 
-This optional method is used to get all key-value (kv) pairs in the store as an array.
+## General APIs
 
-### store.destroy(key, callback) | store.destoryProm(key)
-> Required to be supported by underlying store type
+### store.allProm()
+> Available only if suported by underlying stores
 
-This required method is used to destroy/delete a kv from the store given a key.
+This method is used to get all key-value (kv) pairs in the store as an array.
 
-### store.clear(callback) | store.clearProm()
-> Optional
+### store.destoryProm(key, options)
 
-This optional method is used to delete all kvs from the store.
+This method is used to destroy/delete a kv from the store given a key.
 
-### store.length(callback) | store.lengthProm()
-> Optional
+### store.clearProm()
+> Available only if suported by underlying stores
 
-This optional method is used to get the count of all kvs in the store.
+This method is used to delete all kvs from the store.
 
-### store.get(key, callback) | store.getProm(key)
-> Required
+### store.lengthProm()
+> Available only if suported by underlying stores
 
-This required method is used to get a session from the store given a key.
+This method is used to get the count of all kvs in the store.
+
+### store.getProm(key, options)
+
+This method is used to get a session from the store given a key.
 
 The value returned or in callback(err, value) is null or undefined if the key was not found (and there was no error). A special case is made when error.code === 'ENOENT' to act like callback(null, null).
 
-### store.set(key, value, callback) | store.setProm(key, value)
-> Required
+### store.setProm(key, value, options)
 
-This required method is used to upsert a kv into the store
+This method is used to upsert a kv into the store
 
-### store.touch(key, value, callback) | store.touchProm(key, value)
-> Optional
+### store.touchProm(key, value, options)
+> Available only if suported by underlying stores
 
-This recommended method is used to "touch" a given kv. The callback should be called as callback(error) once the session has been touched.
+This method is used to "touch" a given kv.
 
-This is primarily used when the store will automatically delete idle sessions and this method is used to signal to the store the given session is active, potentially resetting the idle timer.
+## Locking APIs
 
-## Special API
+### store.lockProm(key, options)
+Returns a KV object that acts like a mini-store with only one key-value in there. All General APIs that take in 'key' as the first parameter are supported. `Namely: kv.setProm, kv.getProm, kv.destroyProm, kv.touchProm`
 
-### store.lock()
-> Special
+### kv.setProm(value, options)
+Same as store.setProm but operates on the key specified during store.lockProm
 
+### kv.getProm(options)
+Same as store.getProm but operates on the key specified during store.lockProm
 
+### kv.destoryProm(options)
+Same as store.destoryProm but operates on the key specified during store.lockProm
+
+### kv.touchProm(value, options)
+Same as store.touchProm but operates on the key specified during store.lockProm
+
+> NOTE: If kv is used on any methods other than the ones mentioned here and if that method is supported by the underlying store, the method runs on the store instead of kv. e.g. kv.lengthProm() would be same as store.lengthProm() and return the same result
+
+# License
+MIT (c) 2020 harleen mann

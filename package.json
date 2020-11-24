@@ -1,16 +1,23 @@
 {
   "name": "lib-generic-store",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A generic implentation of a key-value store",
   "main": "index.js",
   "scripts": {
     "test": "jest"
   },
-  "keywords": ["store", "key", "value", "generic"],
+  "keywords": [
+    "store",
+    "key",
+    "value",
+    "generic",
+    "locking",
+    "mutex"
+  ],
   "author": "harleen mann",
   "license": "MIT",
   "dependencies": {
-    "express-session": "^1.17.1"
+    "async-mutex": "^0.2.4"
   },
   "devDependencies": {
     "connect-redis": "^5.0.0",
@@ -20,5 +27,9 @@
   },
   "peerDependencies": {
     "connect-redis": "^5.0.0"
+  },
+  "jest": {
+    "testTimeout": 5000,
+    "verbose": true
   }
 }
